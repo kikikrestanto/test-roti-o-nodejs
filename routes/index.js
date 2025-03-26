@@ -21,15 +21,32 @@ router.post("/list-data", (req,res) => {
 })
 
 // UPDATE
-router.put("/update-data/:id", (req, res) => {
+router.post("/update-data/:id", async (req, res) => {
     const { id } = req.params;
-    const {nik, nama_karyawan, tanggal_lahir, jenis_kelamin} = req.body;
-    db.query("UPDATE table_users SET nik = ?, nama_karyawan = ?, tanggal_lahir = ?, jenis_kelamin = ? WHERE id = ?", [nik, nama_karyawan, tanggal_lahir, jenis_kelamin, id], (err, result) => {
-        if(err) return res.status(500).json({error: err.message});
-        if(result.affectedRows === 0) return res.status(404).json({error: 'Data tidak ditemukan'}),
-        res.json({message: 'Data Berhasil Diperbarui'});
-    })
-})
+    const { nik, nama_karyawan, tanggal_lahir, jenis_kelamin } = req.body;
+    const data = [nik, nama_karyawan, tanggal_lahir, jenis_kelamin, id];
+
+    try {
+        const result = await new Promise((resolve, reject) => {
+            db.query("UPDATE table_users SET nik = ?, nama_karyawan = ?, tanggal_lahir = ?, jenis_kelamin = ? WHERE id = ?", data, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Data tidak ditemukan' });
+        }
+
+        res.json({ message: 'Data Berhasil Diperbarui' });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 
 // GET BY ID
 router.post("/get-data/:id", (req, res) => {
